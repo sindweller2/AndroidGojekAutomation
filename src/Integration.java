@@ -1,4 +1,5 @@
 import io.appium.java_client.android.AndroidDriver;
+import org.json.JSONObject;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.net.MalformedURLException;
@@ -8,10 +9,11 @@ import java.util.concurrent.TimeUnit;
 public class Integration {
     public Utility utility = new Utility();
     public AndroidDriver driver;
-    public String number;
+    public String responseGETBody;
+    public Integer lastData;
     public String otp;
     public String phoneNumber = "8562954340";
-    public Long timeout = 10L;
+    public Long timeout = 20L;
 
     public void Run() throws InterruptedException, MalformedURLException {
         DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
@@ -40,14 +42,14 @@ public class Integration {
         driver.findElementById("com.gojek.app.staging:id/input_phone_number").sendKeys(phoneNumber);
 //        TimeUnit.SECONDS.sleep(timeout);
         driver.findElementById("com.gojek.app.staging:id/circular_btn").click();
-//        TimeUnit.SECONDS.sleep(timeout);
+        TimeUnit.SECONDS.sleep(timeout);
 
         //otp
-        number = utility.OTP(phoneNumber).replaceAll("[^0-9]", "");
-
-        if (number.length() > 4) {
-            otp = number.substring(number.length() - 4);
-        }
+        responseGETBody = utility.GetOTP(phoneNumber);
+        JSONObject jsonGETObject = new JSONObject(responseGETBody);
+        lastData = jsonGETObject.getJSONArray("data").length();
+        otp = jsonGETObject.getJSONArray("data").getJSONObject(lastData - 1).get("otp").toString();
+        TimeUnit.SECONDS.sleep(timeout);
 
         driver.findElementById("com.gojek.app.staging:id/pin_input_edit_text").sendKeys(otp);
 //        TimeUnit.SECONDS.sleep(timeout);
@@ -87,6 +89,7 @@ public class Integration {
 
     public void goRideXPath() throws InterruptedException {
         driver.findElementByXPath("/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.view.ViewGroup/android.widget.FrameLayout[2]/android.widget.FrameLayout/androidx.recyclerview.widget.RecyclerView/android.widget.LinearLayout[1]/android.widget.FrameLayout/android.widget.ImageView").click();
+        TimeUnit.SECONDS.sleep(timeout);
         driver.findElementById("com.gojek.app.staging:id/ll_button_container").click();
         TimeUnit.SECONDS.sleep(timeout);
         driver.navigate().back();

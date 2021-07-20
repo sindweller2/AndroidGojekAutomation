@@ -1,7 +1,10 @@
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 
@@ -29,39 +32,47 @@ public class Utility {
         }
     }
 
-    public String OTP(String phoneNumber) {
-        try {
-            ProcessBuilder process = new ProcessBuilder("psql", "--user=otp_service", "--host=10.120.2.59", "--dbname=otp_service_integration", "-x", "-c", "select otp from otp_requests where phone='" + phoneNumber + "' order by created_at desc limit 1");
-            process.environment().put("PGPASSWORD", "307267f6f24c9678290f0895ac8cf17f");
-            Process p;
-            p = process.start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            StringBuilder builder = new StringBuilder();
-            String line = null;
+//    public String OTP(String phoneNumber) {
+//        try {
+//            ProcessBuilder process = new ProcessBuilder("psql", "--user=otp_service", "--host=10.120.2.59", "--dbname=otp_service_integration", "-x", "-c", "select otp from otp_requests where phone='" + phoneNumber + "' order by created_at desc limit 1");
+//            process.environment().put("PGPASSWORD", "307267f6f24c9678290f0895ac8cf17f");
+//            Process p;
+//            p = process.start();
+//            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+//            StringBuilder builder = new StringBuilder();
+//            String line = null;
+//
+//            while ((line = reader.readLine()) != null) {
+//                builder.append(line);
+//                builder.append(System.getProperty("line.separator"));
+//            }
+//            String result = builder.toString();
+//
+//            return result;
+//        } catch (Exception e) {
+//            return e.getMessage();
+//        }
+//    }
 
-            while ((line = reader.readLine()) != null) {
-                builder.append(line);
-                builder.append(System.getProperty("line.separator"));
-            }
-            String result = builder.toString();
-
-            return result;
-        } catch (Exception e) {
-            return e.getMessage();
-        }
-    }
-
-    public String SendGETRequest(String URL) {
+    public String GetOTP(String phoneNumber) {
         try {
             Integer responseCode;
             String responseStatus;
             String inputLine;
-            java.net.URL url = new URL(URL);
+            String requestBody = "{\"phone\":\"" + phoneNumber + "\"}";
+            java.net.URL url = new URL("http://10.120.4.21:9000/otp");
             HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
             httpURLConnection.setDoOutput(true);
             httpURLConnection.setRequestMethod("GET");
             httpURLConnection.setRequestProperty("Content-Type", "application/json");
-            httpURLConnection.setRequestProperty("Authorization", "Basic aWNwLWlkZW50aXR5LXFhOjA2Zjk5NTU5LWEyMjgtNGNiZC1hN2JmLWE5YzhlZDhlMjlhNg==");
+            httpURLConnection.setRequestProperty("clientid", "red_robin");
+            httpURLConnection.setRequestProperty("passkey", "robin1234");
+            OutputStream outputStream = httpURLConnection.getOutputStream();
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
+            outputStreamWriter.write(requestBody);
+            outputStreamWriter.flush();
+            outputStreamWriter.close();
+            outputStream.close();
             httpURLConnection.connect();
             responseCode = httpURLConnection.getResponseCode();
             responseStatus = httpURLConnection.getResponseMessage();
